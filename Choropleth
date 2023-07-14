@@ -1,0 +1,53 @@
+import pandas as pd
+import plotly.express as px
+import matplotlib.pyplot as plt
+
+#the files can be downloaded here: https://nccs-data.urban.org/data.php?ds=bmf
+#see also the data dictionaries here: https://nccs-data.urban.org/dd2.php?close=1&form=BMF+08/2016
+#and the IRS activity code dictionary here: https://nccs.urban.org/publication/irs-activity-codes
+
+#This code is admittedly a bit hard to read, but it's largely due to some datatype entanglements. FIPS codes that begin with a leading 0 cause significant issues in the CSV environment. 
+
+import pandas as pd
+from urllib.request import urlopen
+import json
+import plotly.express as px
+
+response = urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json')
+counties = json.load(response)
+
+data = pd.read_csv("C:\\Users\\YourName\\Downloads\\bmf.bm2201.csv") 
+data = data[['FIPS', 'nteeFinal']]
+#data = data.dropna()
+data['FIPS'] = data['FIPS'].astype(str).str[:-2].str.zfill(5)
+U = pd.DataFrame(data[data['nteeFinal'] == 'X30']['FIPS'])
+
+D = []
+Q = pd.read_csv(r"C:\Users\YourName\Downloads\fips-by-state.csv", dtype={"FIPS": str})
+Z = []
+for fi in Q['FIPS']:
+    Z.append(fi)
+
+for fip in Z:
+    try:
+        E = U['FIPS'].value_counts()[fip]
+        D.append(E)
+    except:
+        D.append(0)
+        continue
+
+columns = ["FIPS","FREQ"]
+data = {'FIP':Z, 'FREQ':D}
+finaldf = pd.DataFrame(data)
+
+#the map:
+response = urlopen('https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json')
+counties = json.load(response)
+fig = px.choropleth(finaldf, geojson=counties, locations='FIP', color='FREQ',
+                           color_continuous_scale="Viridis",
+                           range_color=(0, 12),
+                           scope="usa",
+                           labels={'unemp':'unemployment rate'}
+                          )
+fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
+fig.show()

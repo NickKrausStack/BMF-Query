@@ -1,0 +1,55 @@
+import pandas as pd
+from geopy.geocoders import Nominatim
+from urllib.request import urlopen
+import json
+import plotly.express as px
+import matplotlib.pyplot as plt
+
+#download all files here: https://nccs-data.urban.org/data.php?ds=bmf
+#these are all the filenames for the first bmf in each available year
+import pandas as pd
+from geopy.geocoders import Nominatim
+from urllib.request import urlopen
+import json
+import plotly.express as px
+import matplotlib.pyplot as plt
+
+newdf = pd.DataFrame({'Year':[], 'AVGASSETS':[]})
+#this array is all the year snippets for the filenames of the first bmf file for each year.
+rg = ["2201","2004", "1908","1812","1709","1602","1502","1402","1302","1202","1106","1001","0901","0801","0701","0601","0507","0404","0301","0201","0107","0005","9912","9809","9710","9606","9508"]
+
+#now we can loop through the above array to access every single bmf file.
+
+for B in rg:
+    data = pd.read_csv("C:\\Users\\YOURNAME\\Downloads\\bmf.bm"+B+".csv") 
+    r = []
+    #this is optional, if you want to take a look at the columnnames of each year. They do change abit.
+    #for a in data.head(0):
+    #    r.append(a)
+    #print(r)
+
+#We need nested try to account for the fact that the two columns are sometimes capitalized and sometimes not.
+    try:
+        try:
+            t = pd.DataFrame(data[(data['NTEEFINAL'] == 'X30') & (data['ASSETS'].notnull())])  
+            a = t['ASSETS'].max()
+        except:
+            t = pd.DataFrame(data[(data['nteeFinal'] == 'X30') & (data['Assets'].notnull())])  
+            a = t['Assets'].max()
+    except:
+        try:
+            t = pd.DataFrame(data[(data['nteeFinal'] == 'X30') & (data['ASSETS'].notnull())])  
+            a = t['ASSETS'].max()
+        except:
+            t = pd.DataFrame(data[(data['NTEEFINAL'] == 'X30') & (data['Assets'].notnull())])  
+            a = t['Assets'].max()
+
+#populate the empty dataframe with the data.
+    newerdf = pd.DataFrame({"Year":[B],"AVGASSETS":[a]})
+    newdf = pd.concat([newdf, newerdf], ignore_index=True)
+    print(B)
+
+print(newdf)
+
+#now pipe out the results to a new csv on your local computer:
+newdf.to_csv("C:\\Users\\YOURNAME\\Downloads\\avgassets.csv")
